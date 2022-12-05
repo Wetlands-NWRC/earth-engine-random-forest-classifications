@@ -56,6 +56,27 @@ class TileToCOG(Tool):
         super().__init__()
         self.config_filename = config_filename
 
+        # get a unique list of row idxs
+        indexs = self.get_row_idxs()
+
+        # format a dict to store all tiles that correspond to the row
+        tiles = self.get_tile_by_row()
+
+        for row, tiles in tiles.items():
+            out_dir = [row for _ in range(len(tiles))]
+            with ProcessPoolExecutor() as executor:
+                executor.map(self.as_cog, tiles, out_dir)
+            time.sleep(3)
+
+    def get_row_idxs(self) -> List[str]:
+        """ returns a unique list of row indexs from the second level of the input dir """
+        pass
+
+    def get_tile_by_row(self, row_indexs: List[str]) -> Dict[str, List[str]]:
+        obj = {}
+        for dirname, dirnames, filenames in os.walk(path):
+            pass
+
     def as_cog(self, filename: str, out_dir: str = None):
         """Helper method that converts a single Geotiff to COG format. The output filename will be the same as the 
         input but will have the suffix _cog appended to the string. 
