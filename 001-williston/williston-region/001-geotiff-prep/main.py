@@ -1,5 +1,6 @@
 import glob
 import os
+import re
 import time
 from abc import ABC
 from concurrent.futures import ProcessPoolExecutor
@@ -68,9 +69,12 @@ class TileToCOG(Tool):
                 executor.map(self.as_cog, tiles, out_dir)
             time.sleep(3)
 
-    def get_row_idxs(self) -> List[str]:
+    def get_row_idxs(self, top: str) -> Set[str]:
         """ returns a unique list of row indexs from the second level of the input dir """
-        pass
+        pattern = re.compile(r'\d\d\d')
+        dirs = next(os.walk(top))[1]
+        row_idxs = set([pattern.search(tile_dir).group(1) for tile_dir in dirs])
+        return row_idxs
 
     def get_tile_by_row(self, row_indexs: List[str]) -> Dict[str, List[str]]:
         obj = {}
