@@ -15,7 +15,44 @@ class Tool(ABC):
 
 
 class TileToCOG(Tool):
-    def __init__(self, config_filename: str, input_dir: str = None) -> None:
+    def __init__(self, config_filename: str) -> None:
+        """A Tool class that is used to convert data cube tiles to cloud optimized tiffs.
+        The tool will group the tiles by row (the first 3 numbers in the tile id), then will iteratively go over 
+        each row converting all images in that row to COG. Will create a output folder struct that mimics the input data struct of
+        {rowIdx: [tiles, ...]}. See example below for conceptual diagram
+
+        the directory needs to be in this format
+
+        Example:
+        --------
+
+        input dir struct
+        root:
+            tile001001 \
+                tile001001.tif
+            tile001002 \
+                tile001002.tif
+            tile002001 \
+                tile002001.tif
+            tile002002\
+                tile002002.tif
+
+        output dir struct
+        tmp\
+            001 (row index)\
+                tile001001.tif
+                tile001002.tif
+            002\
+                tile002001.tif
+                tile002002.tif
+
+        Note: tile<6 digit number>: the number refers to its x,y position in the grid
+        given tile001001, means this tile it at x = 001 row 1, y = 001 col 1
+
+
+        Args:
+            config_filename (str): _description_
+        """
         super().__init__()
         self.config_filename = config_filename
 
