@@ -1,12 +1,68 @@
 import glob
 import os
 import time
+from abc import ABC
 from concurrent.futures import ProcessPoolExecutor
 from typing import Dict, List, Set, Union
 
 import numpy as np
 import yaml
 from osgeo import gdal
+
+
+class Tool(ABC):
+    pass
+
+
+class TileToCOG(Tool):
+    def __init__(self, config_filename: str, input_dir: str = None) -> None:
+        super().__init__()
+        self.config_filename = config_filename
+
+    def as_cog(self, filename: str, out_dir: str = None):
+        """Helper method that converts a single Geotiff to COG format. The output filename will be the same as the 
+        input but will have the suffix _cog appended to the string. 
+
+        Args:
+            filename (str): the file name that represents the geotiff that is to be converted
+            out_dir(str): the output destination
+        """
+        out_dir = 'tmp' if out_dir is None else out_dir
+
+        # load the data
+        raster: gdal.Dataset = gdal.Open(filename)
+        x_size = raster.RasterXSize
+        y_size = raster.RasterYSize
+        n_bands = raster.RasterCount
+        gt = raster.GetGeoTransform()
+        proj = raster.GetProjection()
+        array: np.array = raster.ReadAsArray()
+
+        # grab the driver
+        driver: gdal.Driver = gdal.GetDriverByName("GTiff")
+        options = [
+            "TILED=YES",
+            "COMPRESS=LZW",
+            "INTERLEAVE=BAND"
+        ]
+
+        # create the output image to have values burned into
+        file_name_out = set_out_file(out_dir, filename)
+
+        data_set: gdal.Dataset = driver.Create(file_name_out, x_size, y_size, n_bands, gdal.GDT_Float32,
+                                               options=options)
+        data_set.SetGeoTransform(gt)
+        data_set.SetProjection(proj)
+
+        # burn values
+        for i in range(n_bands):
+            #####
+            out_band: gdal.Band = data_set.GetRasterBand(i + 1)
+            out_band.WriteArray(array[i])
+            data_set.BuildOverviews("NEAREST", [2, 4, 8, 16, 32, 64])
+            out_band = None
+            #####
+        data_set = None
 
 
 def set_out_file(dir: str, filename: str) -> str:
@@ -28,6 +84,10 @@ def difference_files(left: List[str], right: List[str]) -> Union[Set[str], None]
     return dif
 
 
+def dir_list(root: str):
+    pass
+
+
 def restructure_path(glob: List[str], tile_ids: Set):
     splits = [os.path.split(i) for i in glob]
     paths = []
@@ -39,7 +99,10 @@ def restructure_path(glob: List[str], tile_ids: Set):
     return paths
 
 
-def to_cof(filename: str, out_dir: str = 'tmp') -> None:
+def to_cof(filename: str, out_dir: str = None) -> None:
+    # set default value
+    out_dir = 'tmp' if out_dir is None else out_dir
+
     # load the data
     raster: gdal.Dataset = gdal.Open(filename)
     x_size = raster.RasterXSize
