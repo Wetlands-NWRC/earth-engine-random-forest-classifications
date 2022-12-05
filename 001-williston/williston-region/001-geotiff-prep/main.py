@@ -76,10 +76,18 @@ class TileToCOG(Tool):
                        for tile_dir in dirs])
         return row_idxs
 
-    def get_tile_by_row(self, row_indexs: List[str]) -> Dict[str, List[str]]:
-        obj = {}
-        for dirname, dirnames, filenames in os.walk(path):
-            pass
+    def get_tile_by_row(self, row_indexs: Set[str], glob_pattern: str) -> Dict[str, List[str]]:
+        obj = {idx: [] for idx in row_indexs}
+        tifs = glob.glob(glob_pattern, recursive=True)
+
+        for index, array in obj.items():
+            for tif in tifs:
+                head, tail = os.path.split(tif)
+                idx_pattern = re.compile(r'\d\d\d\d\d\d')
+                dest_idx = idx_pattern.search(tail).group()[:3]
+                if index == dest_idx:
+                    array.append(tif)
+        return obj
 
     def as_cog(self, filename: str, out_dir: str = None):
         """Helper method that converts a single Geotiff to COG format. The output filename will be the same as the 
@@ -139,6 +147,10 @@ if __name__ == '__main__':
     os.chdir(current_dir)
 
     tool = TileToCOG("some-config.yml")
-    tool.get_row_idxs(
+    idx = tool.get_row_idxs(
         top="./root"
     )
+
+    test_glob_patter = '**/*.txt'
+    obj = tool.get_tile_by_row(idx, test_glob_patter)
+    print(obj)
