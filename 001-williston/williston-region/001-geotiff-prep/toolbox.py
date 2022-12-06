@@ -139,12 +139,12 @@ class TileToCOG(Tool):
         tiles_dir = cfg['default'].get('tiles')
 
         indexs = get_row_idxs(
-            top=tiles_dir
+            top=rf'{tiles_dir}'
         )
 
         tiles = get_tile_by_row(
             row_indexs=indexs,
-            glob_pattern=None
+            glob_pattern=pattern
         )
 
         if not os.path.exists(self._dump):
