@@ -98,7 +98,7 @@ class TileToCOG(Tool):
                 filename (str): the file name that represents the geotiff that is to be converted
                 out_dir(str): the output destination
             """
-            out_dir = 'tmp' if out_dir is None else out_dir
+            out_dir = 'dump' if out_dir is None else out_dir
 
             # load the data
             raster: gdal.Dataset = gdal.Open(filename)
@@ -152,14 +152,7 @@ class TileToCOG(Tool):
             glob_pattern=glob_pattern
         )
 
-        if not os.path.exists(tmp_dir):
-            os.mkdir(tmp_dir)
-
-        for row, tiles in tiles.items():
-            print(f"Converting: {row}")
-            out_dirs = [os.path.join(self._dump, _) for _ in range(len(row))]
-            with ProcessPoolExecutor() as exec:
-                exec.map(as_cog, tiles, out_dirs)
-            out_dirs = None
-            time.sleep(3)
+        tile_list = tiles.get('068')
+        with ProcessPoolExecutor(max_workers=3) as exec:
+            exec.map(as_cog, tile_list)
         print(f"Tool Exits")
