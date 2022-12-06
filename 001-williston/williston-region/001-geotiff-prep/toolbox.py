@@ -7,6 +7,7 @@ from concurrent.futures import ProcessPoolExecutor
 from typing import Dict, List, Set
 
 import numpy as np
+import yaml
 from osgeo import gdal
 
 
@@ -131,8 +132,14 @@ class TileToCOG(Tool):
         ################################################
         # parse config
 
+        with open(self.config_filename) as stream:
+            cfg = yaml.safe_load_all()
+
+        pattern = cfg['default'].get('pattern')
+        tiles_dir = cfg['default'].get('tiles')
+
         indexs = get_row_idxs(
-            top=None
+            top=tiles_dir
         )
 
         tiles = get_tile_by_row(
