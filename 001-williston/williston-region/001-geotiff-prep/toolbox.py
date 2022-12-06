@@ -68,9 +68,12 @@ class TileToCOG(Tool):
                             for tile_dir in dirs])
             return row_idxs
 
-        def get_tile_by_row(row_indexs: Set[str], glob_pattern: str) -> Dict[str, List[str]]:
+        def get_tile_by_row(row_indexs: Set[str], target_dir: str,
+                            glob_pattern: str) -> Dict[str, List[str]]:
             obj = {idx: [] for idx in row_indexs}
-            tifs = glob.glob(glob_pattern, recursive=True)
+
+            pattern = os.path.join(target_dir, glob_pattern)
+            tifs = glob.glob(pattern, recursive=True)
 
             for index, array in obj.items():
                 for tif in tifs:
@@ -80,6 +83,12 @@ class TileToCOG(Tool):
                     if index == dest_idx:
                         array.append(tif)
             return obj
+
+        def set_out_file(dir: str, filename: str) -> str:
+            head, tail = os.path.split(filename)
+            new_name, ext = tail.split(".")
+            new_name = new_name + '_cog.tif'
+            return os.path.join(dir, new_name)
 
         def as_cog(filename: str, out_dir: str = None):
             """Helper method that converts a single Geotiff to COG format. The output filename will be the same as the 
@@ -130,12 +139,16 @@ class TileToCOG(Tool):
         #         Tool Protocol Starts Here            #
         ################################################
 
+        # set defualts
+        tmp_dir = 'dump' if tmp_dir is None else tmp_dir
+
         indexs = get_row_idxs(
             top=input_dir
         )
 
         tiles = get_tile_by_row(
             row_indexs=indexs,
+            target_dir=input_dir,
             glob_pattern=glob_pattern
         )
 
@@ -150,10 +163,3 @@ class TileToCOG(Tool):
             out_dirs = None
             time.sleep(3)
         print(f"Tool Exits")
-
-
-def set_out_file(dir: str, filename: str) -> str:
-    head, tail = os.path.split(filename)
-    new_name, ext = tail.split(".")
-    new_name = new_name + '_cog.tif'
-    return os.path.join(dir, new_name)
