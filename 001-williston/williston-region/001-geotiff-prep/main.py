@@ -1,13 +1,19 @@
 import os
 
 import toolbox
+from config import CFG
 
 CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 def main() -> int:
+
+    pattern = CFG.pattern
+    tiles_dir = CFG.tiles
+
     toolbox.TileToCOG(
-        config_filename="./config.yaml"
+        input_dir=tiles_dir,
+        glob_pattern=pattern
     )
     return 0
 
