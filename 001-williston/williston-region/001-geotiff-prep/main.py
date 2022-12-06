@@ -1,11 +1,11 @@
+from helpers import *
+from config import CFG
 import os
 import sys
 from concurrent.futures import ProcessPoolExecutor
 
 sys.path.append(".")
 
-from helpers import *
-from config import CFG
 
 CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -23,13 +23,13 @@ def main():
         target_dir=search_dir,
         glob_pattern=pattern
     )
-    h = ' '
 
     print(f"\n{'Starting Conversion':#^30}")
     with ProcessPoolExecutor() as executor:
         for rows, tifs in tiles_x_rows.items():
             print(f"Row: {rows}")
-            out = [os.path.join('tmp', f'{str(rows)}') for _ in range(len(tifs))]
+            out = [os.path.join('tmp', f'{str(rows)}')
+                   for _ in range(len(tifs))]
             executor.map(to_cof, tifs, out)
 
 
