@@ -6,7 +6,9 @@ CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 def main() -> int:
-    tool = toolbox.TileToCOG()
+    toolbox.TileToCOG(
+        config_filename="./config.yaml"
+    )
     return 0
 
 
