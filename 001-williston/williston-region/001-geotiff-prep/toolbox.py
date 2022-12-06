@@ -152,7 +152,8 @@ class TileToCOG(Tool):
             glob_pattern=glob_pattern
         )
 
-        tile_list = tiles.get('068')
-        with ProcessPoolExecutor(max_workers=3) as exec:
-            exec.map(as_cog, tile_list)
+        tifs = tiles.get('068')
+        with ProcessPoolExecutor() as executor:
+            executor.map(as_cog, tifs)
+
         print(f"Tool Exits")
