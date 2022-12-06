@@ -16,7 +16,7 @@ class Tool(ABC):
 
 
 class TileToCOG(Tool):
-    def __init__(self, config_filename: str) -> None:
+    def __init__(self, input_dir: str, glob_pattern: str, tmp_dir: str = None) -> None:
         """A Tool class that is used to convert data cube tiles to cloud optimized tiffs.
         The tool will group the tiles by row (the first 3 numbers in the tile id), then will iteratively go over 
         each row converting all images in that row to COG. Will create a output folder struct that mimics the input data struct of
@@ -55,12 +55,11 @@ class TileToCOG(Tool):
             config_filename (str): _description_
         """
         super().__init__()
-        self.config_filename = config_filename
-        self._dump = 'gtiff-dump'
 
         ###############################################
         #             Helper Functions                #
         ###############################################
+
         def get_row_idxs(top: str) -> Set[str]:
             """ returns a unique list of row indexs from the second level of the input dir """
             pattern = re.compile(r'\d\d\d\d\d\d')
@@ -130,25 +129,18 @@ class TileToCOG(Tool):
         ################################################
         #         Tool Protocol Starts Here            #
         ################################################
-        # parse config
-
-        with open(self.config_filename) as stream:
-            cfg = yaml.safe_load_all()
-
-        pattern = cfg['default'].get('pattern')
-        tiles_dir = cfg['default'].get('tiles')
 
         indexs = get_row_idxs(
-            top=rf'{tiles_dir}'
+            top=input_dir
         )
 
         tiles = get_tile_by_row(
             row_indexs=indexs,
-            glob_pattern=pattern
+            glob_pattern=glob_pattern
         )
 
-        if not os.path.exists(self._dump):
-            os.mkdir(self._dump)
+        if not os.path.exists(tmp_dir):
+            os.mkdir(tmp_dir)
 
         for row, tiles in tiles.items():
             print(f"Converting: {row}")
