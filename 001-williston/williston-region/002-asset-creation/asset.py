@@ -59,4 +59,8 @@ class DC_CreateCloudBackedAsset:
             )
             content = response.content
             pprint(json.loads(content))
+
+            with open("response.content.txt", "ab") as file:
+                file.write(content)
+
         return None
