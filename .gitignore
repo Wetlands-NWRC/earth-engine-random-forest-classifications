@@ -130,3 +130,5 @@ dmypy.json
 root/
 tmp/
 *.tif
+*assets*
+logging/
