@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import time
 from pprint import pprint
 from typing import Any, Dict, List
 
@@ -81,3 +82,4 @@ if __name__ == '__main__':
 
             with open(f"{out_dir}/{row}-{col}-response.content.txt", 'wb') as file:
                 file.write(response.content)
+        time.sleep(15)
