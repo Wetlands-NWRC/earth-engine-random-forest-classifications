@@ -1,66 +1,83 @@
 import json
+import os
 import re
 from pprint import pprint
 from typing import Any, Dict, List
 
 import ee
+import yaml
 from google.auth.transport.requests import AuthorizedSession
 
 
-class DC_CreateCloudBackedAsset:
-    def __init__(self, cloud_uris: List[str], session: AuthorizedSession) -> None:
+class eeCloudRequest(dict):
+    def __init__(self, uri: str) -> None:
+        super().__init__({
+            'type': 'IMAGE',
+            'gcs_location': {
+                'uris': [uri]
+            }
+        })
+
+    def __setitem__(self, __key: str, __value: str) -> None:
+        return super(eeCloudRequest, self).__setitem__(__key, __value)
+
+
+class CreateCloudBackedAsset:
+    def __init__(self, session: AuthorizedSession, request: List[eeCloudRequest]) -> None:
         """ Used to help write cloud optimized Geotiifs to earth engine
         image collection (user defined)
         """
-        self.uris = cloud_uris
-        self.session = session
-        self._requests_template = {
-            'type': 'IMAGE',
-            'gcs_location': {
-                'uris': []
-            },
-            'properties': {
-                'row': 0,
-                'col': 0
-            },
-        }
+        self._session = session
+        self._request = request
 
-    def extract_row_col(self, uri: str):
-        None
-
-    def requests(self) -> List[Dict[str, Any]]:
-        # for each uri we want to parse out the row and col from URI
-        requests = []
-        for uri in self.uris:
-            row, col = None, None
-            input_request = self._requests_template
-
-            # populate the template
-            input_request.get('gcs_location').get('uris').\
-                append(uri)
-
-            input_request['properties']['row'] = row
-            input_request['properties']['col'] = col
-
-            requests.append(input_request)
-            input_request = None
-
-        return requests
-
-    def post(self, requests: List[Dict[str, Any]]) -> None:
-        project_folder = None
-        asset_id = None
+    def post(self, project_folder: str, asset_id: str) -> None:
         url = 'https://earthengine.googleapis.com/v1alpha/projects/{}/assets?assetId={}'
 
-        for request in request:
-            response = self.session.post(
-                url=url.format(project_folder, asset_id),
-                data=json.dumps(request)
+        response = self._session.post(
+            url=url.format(project_folder, asset_id),
+            data=json.dumps(self._request)
+        )
+
+        return response
+
+
+if __name__ == '__main__':
+    os.chdir(os.path.abspath(os.path.dirname(__file__)))
+
+    with open("assets.yml") as stream:
+        document: Dict[str, Any] = yaml.safe_load(stream)
+
+    for section, config in document.items():
+        for asset_config in config.values():
+            row = asset_config.get('row')
+            col = asset_config.get('col')
+
+            req = eeCloudRequest(
+                uri=asset_config.pop('uri')
             )
-            content = response.content
-            pprint(json.loads(content))
 
-            with open("response.content.txt", "ab") as file:
-                file.write(content)
+            req['properties'] = {
+                'row': row,
+                'col': col
+            }
 
-        return None
+            asset_name = asset_config.pop('Name')
+
+            POST = CreateCloudBackedAsset(
+                session=AuthorizedSession(
+                    ee.data.get_persistent_credentials()),
+                request=req
+            )
+            response = POST.post(
+                project_folder="fpca-336015",
+                asset_id=f"test-collection/{asset_name}"
+            )
+
+            pprint(json.loads(response.content))
+
+            out_dir = f'logging/{row}'
+            if not os.path.exists(out_dir):
+                os.makedirs(out_dir)
+
+            with open(f"{out_dir}/{row}-{col}-response.content.txt", 'wb') as file:
+                file.write(response.content)
