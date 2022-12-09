@@ -3,6 +3,5 @@ from dataclasses import dataclass
 
 @dataclass
 class CFG:
-    gcp_root: str = None
-    ee_asset: str = None
-    project_folder = None
+    ee_collection: str = "williston-cba"
+    project_folder: str = "fpca-336015"

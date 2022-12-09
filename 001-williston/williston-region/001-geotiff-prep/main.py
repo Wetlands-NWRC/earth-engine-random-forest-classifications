@@ -1,8 +1,9 @@
-from helpers import *
-from config import CFG
 import os
 import sys
 from concurrent.futures import ProcessPoolExecutor
+
+from config import CFG
+from helpers import *
 
 sys.path.append(".")
 

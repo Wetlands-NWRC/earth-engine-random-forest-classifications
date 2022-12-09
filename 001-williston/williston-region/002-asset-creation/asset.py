@@ -5,6 +5,7 @@ import time
 from pprint import pprint
 from typing import Any, Dict, List
 
+import config
 import ee
 import yaml
 from google.auth.transport.requests import AuthorizedSession
@@ -44,7 +45,9 @@ class CreateCloudBackedAsset:
 
 if __name__ == '__main__':
     os.chdir(os.path.abspath(os.path.dirname(__file__)))
-
+    CFG = config.CFG
+    ee_asset = CFG.ee_collection
+    destination = CFG.project_folder
     with open("assets.yml") as stream:
         document: Dict[str, Any] = yaml.safe_load(stream)
 
@@ -70,8 +73,8 @@ if __name__ == '__main__':
                 request=req
             )
             response = POST.post(
-                project_folder="fpca-336015",
-                asset_id=f"test-collection/{asset_name}"
+                project_folder=destination,
+                asset_id=f"{ee_asset}/{asset_name}"
             )
 
             pprint(json.loads(response.content))

@@ -7,7 +7,7 @@ import yaml
 if __name__ == "__main__":
     os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
-    with open("./test.txt", 'r') as file:
+    with open("./assets.txt", 'r') as file:
         lines = [i for i in file.read().strip().split("\n")][3:]
 
     document = {}
